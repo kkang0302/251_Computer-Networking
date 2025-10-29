@@ -180,6 +180,8 @@ class Response():
         elif main_type == 'image':
             base_dir = BASE_DIR  # Don't append static/ as it's in the URL path
             self.headers['Content-Type'] = 'image/{}'.format(sub_type)
+            self.headers['Cache-Control'] = 'public, max-age=31536000'
+            self.headers['Accept-Ranges'] = 'bytes'
             print("[Response] Image file - using base_dir: {}".format(base_dir))
         elif main_type == 'application':
             base_dir = BASE_DIR+"apps/"
