@@ -32,4 +32,73 @@ img {
 	margin-top: 20px;
 }
 /* login */
+/* --- login page styles --- */
+body.login-page {
+	font-family: Arial, sans-serif;
+	background-color: #f4f4f4;
+	display: flex;
+	height: 100vh;
+	align-items: center;
+	justify-content: center;
+	background-image: url('/static/images/background.jpg');
+	background-size: cover;
+	background-position: center;
+}
+
+.login-card {
+	background-color: rgba(255,255,255,0.95);
+	padding: 40px;
+	border-radius: 10px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+	text-align: center;
+	max-width: 420px;
+	width: 90%;
+}
+
+.login-card img {
+	display: block;
+	margin: 0 auto 12px auto;
+	max-width: 100%;
+	height: auto;
+}
+
+.login-card h1 {
+	color: #333;
+	margin: 0 0 12px 0;
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	align-items: stretch;
+}
+
+.login-form label {
+	font-weight: bold;
+	text-align: left;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.login-form input[type="submit"] {
+	margin-top: 10px;
+	padding: 10px;
+	background-color: #007BFF;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.login-form input[type="submit"]:hover {
+	opacity: 0.95;
+}
 

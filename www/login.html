@@ -1,14 +1,21 @@
-<html>
-  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; height: 100vh; align-items: center; justify-content: center; background-image: url('/static/images/background.jpg'); background-size: cover; background-position: center;">
-    <div style="background-color: rgba(255,255,255,0.95); padding: 40px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); text-align: center; max-width:420px; width:90%;">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body class="login-page">
+    <div class="login-card">
       <img src="/static/images/welcome.png" alt="bksysnet at HCMUT">
-      <h1 style="color: #333;">Login</h1> 
-      <form method="POST" action="/login" style="display: flex; flex-direction: column; gap: 12px;">
-        <label style="font-weight: bold; text-align: left;">Username:</label>
-        <input name="username" type="text" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-        <label style="font-weight: bold; text-align: left;">Password:</label>
-        <input name="password" type="password" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-        <input type="submit" value="Login" style="margin-top: 10px; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      <h1>Login</h1>
+      <form method="POST" action="/login" class="login-form">
+        <label>Username:</label>
+        <input name="username" type="text">
+        <label>Password:</label>
+        <input name="password" type="password">
+        <input type="submit" value="Login">
       </form>
     </div>
   </body>

@@ -25,15 +25,7 @@ import os
 import mimetypes
 from .dictionary import CaseInsensitiveDict
 
-# Get the absolute path of the current file (response.py)
-current_file = os.path.abspath(__file__)
-# Get the daemon directory
-daemon_dir = os.path.dirname(current_file)
-# Get the project root directory (parent of daemon)
-BASE_DIR = os.path.dirname(daemon_dir) + os.sep
-print("[Response] Module file: {}".format(current_file))
-print("[Response] Daemon dir: {}".format(daemon_dir))
-print("[Response] BASE_DIR: {}".format(BASE_DIR))
+BASE_DIR = os.path.dirname(os.path.join(os.path.dirname(__file__), '..')) + os.sep
 
 class Response():   
     """The :class:`Response <Response>` object, which contains a
@@ -166,23 +158,17 @@ class Response():
         print("[Response] processing MIME main_type={} sub_type={}".format(main_type,sub_type))
         if main_type == 'text':
             self.headers['Content-Type']='text/{}'.format(sub_type)
-            if sub_type == 'css':
-                base_dir = BASE_DIR  # Don't append static/ since it's in the URL
-                print("[Response] CSS file - using base_dir: {}".format(base_dir))
+            if sub_type == 'plain' or sub_type == 'css':
+                base_dir = BASE_DIR+"static/"
             elif sub_type == 'html':
                 base_dir = BASE_DIR+"www/"
-                print("[Response] HTML file - using base_dir: {}".format(base_dir))
-            elif sub_type == 'plain' or sub_type == 'csv' or sub_type == 'xml':
+            elif sub_type == 'csv' or sub_type == 'xml':
                 base_dir = BASE_DIR+"static/"
-                print("[Response] Other text file - using base_dir: {}".format(base_dir))
             else:
                 raise ValueError("Invalid MIME type: main_type={} sub_type={}".format(main_type,sub_type))
         elif main_type == 'image':
-            base_dir = BASE_DIR  # Don't append static/ as it's in the URL path
-            self.headers['Content-Type'] = 'image/{}'.format(sub_type)
-            self.headers['Cache-Control'] = 'public, max-age=31536000'
-            self.headers['Accept-Ranges'] = 'bytes'
-            print("[Response] Image file - using base_dir: {}".format(base_dir))
+            base_dir = BASE_DIR+"static/"
+            self.headers['Content-Type']='image/{}'.format(sub_type)
         elif main_type == 'application':
             base_dir = BASE_DIR+"apps/"
             self.headers['Content-Type']='application/{}'.format(sub_type)
@@ -217,35 +203,24 @@ class Response():
         :rtype tuple: (int, bytes) representing content length and content data.
         """
         rel_path = path.lstrip('/') or 'index.html'
-        print("[Response] BASE_DIR is: {}".format(BASE_DIR))
-        print("[Response] Original path: {}, base_dir: {}".format(path, base_dir))
 
-        # Keep the full path for static/ requests since base_dir is already set correctly
-        # Only strip www/ prefix since that's handled differently
-        if rel_path.startswith('www/'):
-            rel_path = rel_path[len('www/'):]
-            print("[Response] Stripped www/ prefix, new rel_path: {}".format(rel_path))
+        # Avoid duplicating directory fragments when base_dir already points to
+        # static/ or www/. e.g. /static/css/app.css should map to static/css/app.css
+        if rel_path.startswith('static/'):
+            rel_path = rel_path[len('static/'):]  # remove leading directory prefix
+        elif rel_path.startswith('www/'):
+            rel_path = rel_path[len('www/'):]  # rare but keeps consistency
 
         filepath = os.path.join(base_dir, rel_path)
-        abs_filepath = os.path.abspath(filepath)
 
-        print("[Response] Debug paths:")
-        print("  Base dir: {}".format(base_dir))
-        print("  Original path from request: {}".format(path))
-        print("  Relative path after processing: {}".format(rel_path))
-        print("  Full filepath: {}".format(filepath))
-        print("  Absolute filepath: {}".format(abs_filepath))
-        print("  File exists: {}".format(os.path.exists(abs_filepath)))
+        print("[Response] serving the object at location {}".format(filepath))
         
         content = b''
         
         try: 
             # Check if file exists
             if not os.path.exists(filepath):
-                print("[Response] File not found at path: {}".format(filepath))
-                print("[Response] Absolute path was: {}".format(os.path.abspath(filepath)))
-                print("[Response] Parent dir exists: {}".format(os.path.exists(os.path.dirname(filepath))))
-                print("[Response] Parent dir contents: {}".format(os.listdir(os.path.dirname(filepath)) if os.path.exists(os.path.dirname(filepath)) else "parent not found"))
+                print("[Response] File not found: {}".format(filepath))
                 return 0, b'404 Not Found'
             
             # Read file in binary mode
@@ -394,7 +369,6 @@ class Response():
                 base_dir = self.prepare_content_type(mime_type='text/html')
             elif mime_type == 'text/css':
                 base_dir = self.prepare_content_type(mime_type='text/css')
-                print("[Response] CSS request - base_dir: {}".format(base_dir))
             elif mime_type in ['image/png', 'image/jpeg', 'image/gif']:
                 base_dir = self.prepare_content_type(mime_type=mime_type)
             elif mime_type in ['application/json', 'application/xml', 'application/zip']:
@@ -405,13 +379,7 @@ class Response():
 
             # Build content
             c_len, self._content = self.build_content(path, base_dir)
-
-            # If content length is zero the file was not found or couldn't be read.
-            # Return a proper 404 response instead of sending a 200 with a "404 Not Found" body.
-            if c_len == 0:
-                print("[Response] No content found for path {}, returning 404".format(path))
-                return self.build_notfound()
-
+            
             if not self.status_code:
                 self.status_code = 200
             if not self.reason:
