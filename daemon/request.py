@@ -223,19 +223,7 @@ class Request():
         return
 
     def prepare_cookies(self, cookies):
-        if not self.headers:
-            self.headers = {}
-        self.headers['Cookie'] = cookies
-        cookie_dict = {}
-        if cookies:
-            for item in cookies.split(';'):
-                item = item.strip()
-                if '=' in item:
-                    key, val = item.split('=', 1)
-                    cookie_dict[key.strip()] = val.strip()
-            print("[Request] Parsed {} cookies".format(len(cookie_dict)))
-        self.cookies = cookie_dict
-        return
+            self.headers["Cookie"] = cookies
 
     def parse_body(self):
         if not hasattr(self, 'body') or not self.body:

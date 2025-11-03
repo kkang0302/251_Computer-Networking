@@ -102,7 +102,10 @@ def resolve_routing_policy(hostname, routes):
             # TODO: implement the error handling for non mapped host
             #       the policy is design by team, but it can be 
             #       basic default host in your self-defined system
-            # Use a dummy host to raise an invalid connection
+            # Error handling: No backend server configured for this hostname
+            # Use default fallback host (127.0.0.1:9000) as a safe default
+            # In production, this could raise an exception or log to monitoring system
+            print("[Proxy] WARNING: No backend mapped for hostname '{}', using default fallback".format(hostname))
             proxy_host = '127.0.0.1'
             proxy_port = '9000'
         elif len(proxy_map) == 1:

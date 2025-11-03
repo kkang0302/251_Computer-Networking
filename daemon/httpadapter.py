@@ -81,11 +81,24 @@ class HttpAdapter:
         self.response = Response()
 
     def handle_client(self, conn, addr, routes):
-        """Handle incoming client connection"""
+        """
+        Handle incoming client connection
+        
+        This method reads the request from the socket, prepares the request object,
+        invokes the appropriate route handler if available, builds the response,
+        and sends it back to the client.
+
+        :param conn (socket): The client socket connection.
+        :param addr (tuple): The client's address.
+        :param routes (dict): The route mapping for dispatching requests.
+        """
+        # Connection handler.
         self.conn = conn        
+        # Connection address.
         self.connaddr = addr
+        # Request handler
         req = self.request
-        # create fresh response object per request
+        # Response handler
         resp = Response()
         self.response = resp
 
@@ -276,9 +289,17 @@ class HttpAdapter:
         #       username, password =...
         # we provide dummy auth here
         #
+        # Extract authentication credentials
+        # In a real implementation, this could come from config, environment variables, or request
         username, password = ("user1", "password")
-
-        if username:
-            headers["Proxy-Authorization"] = (username, password)
+        
+        # Build Proxy-Authorization header using Basic Authentication
+        # Format: "Basic base64(username:password)"
+        if username and password:
+            import base64
+            # Encode credentials in base64 format for Basic Auth
+            credentials = "{}:{}".format(username, password)
+            encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+            headers["Proxy-Authorization"] = "Basic {}".format(encoded_credentials)
 
         return headers
