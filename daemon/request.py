@@ -130,27 +130,36 @@ class Request():
             print("[Request] Headers parsed: {}".format(dict(self.headers)))
             print("[Request] Body: {}".format(self.body[:100] if self.body else 'None'))
             
-            # Find and set hook from routes
+            # Find and set hook from routes (supports both nested and flat tuple-keyed maps)
             self.hook = None
-            if routes and self.path in routes:
+            method_upper = (self.method or '').upper()
+            # Case 1: Nested dict form -> routes[path][METHOD]
+            if routes and self.path in routes and isinstance(routes[self.path], dict):
                 route = routes[self.path]
-                print("[Request] Found route for path: {}".format(self.path))
-                
-                if self.method in route:
-                    self.hook = route[self.method]
-                    if hasattr(self.hook, '__name__'):
-                        print("[Request] Hook set: {} for {} {}".format(self.hook.__name__, self.method, self.path))
-                    else:
-                        print("[Request] Hook set for {} {}".format(self.method, self.path))
-                else:
-                    print("[Request] Method {} not found in route".format(self.method))
-                    print("[Request] Available methods: {}".format(list(route.keys())))
+                print("[Request] Found nested route for path: {}".format(self.path))
+                if method_upper in route:
+                    self.hook = route[method_upper]
+            # Case 2: Flat tuple-keyed form -> routes[(METHOD, path)]
+            elif routes and ((self.method, self.path) in routes or (method_upper, self.path) in routes):
+                key = (method_upper, self.path) if (method_upper, self.path) in routes else (self.method, self.path)
+                self.hook = routes.get(key)
+                print("[Request] Found flat route with key {}".format(key))
+            # Optional: method-agnostic callable directly at path
+            elif routes and self.path in routes and callable(routes[self.path]):
+                self.hook = routes[self.path]
+                print("[Request] Found callable route for path: {}".format(self.path))
+
+            # Log result
+            if self.hook:
+                name = getattr(self.hook, '__name__', str(self.hook))
+                print("[Request] Hook set: {} for {} {}".format(name, method_upper, self.path))
             else:
-                print("[Request] No route found for path: {}".format(self.path))
+                print("[Request] No route matched for {} {}".format(method_upper, self.path))
                 if routes:
-                    print("[Request] Available routes: {}".format(list(routes.keys())))
-                else:
-                    print("[Request] Routes dict is empty or None")
+                    try:
+                        print("[Request] Available routes: {}".format(list(routes.keys())))
+                    except Exception:
+                        pass
                     
         except Exception as e:
             print("[Request] Error in prepare(): {}".format(e))

@@ -147,6 +147,14 @@ class HttpAdapter:
                             if isinstance(resp._content, str):
                                 resp._content = resp._content.encode('utf-8')
                             print("[HttpAdapter] Set content length: {}".format(len(resp._content)))
+                        else:
+                            # If no 'body' field but dict has 'status' or 'message', 
+                            # automatically convert dict to JSON
+                            import json
+                            json_body = json.dumps(hook_result)
+                            resp._content = json_body.encode('utf-8')
+                            resp.headers['Content-Type'] = 'application/json; charset=utf-8'
+                            print("[HttpAdapter] Auto-converted dict to JSON, content length: {}".format(len(resp._content)))
                         
                         # Update path if redirect
                         if 'path' in hook_result:

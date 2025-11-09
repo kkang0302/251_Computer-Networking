@@ -74,8 +74,12 @@ class WeApRous:
         :rtype: function - A decorator that registers the handler function.
         """
         def decorator(func):
+            # Ensure nested dict structure: routes[path][METHOD] = func
+            if path not in self.routes:
+                self.routes[path] = {}
+
             for method in methods:
-                self.routes[(method.upper(), path)] = func
+                self.routes[path][method.upper()] = func
 
             # Optional attach route metadata to the function
             func._route_path = path

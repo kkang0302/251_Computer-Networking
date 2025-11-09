@@ -41,6 +41,10 @@ PROXY_PASS = {
     "app2.local": ('192.168.56.103', 9002),
 }
 
+# Round-robin state per hostname (thread-safe)
+_RR_STATE = {}
+_RR_STATE_LOCK = threading.Lock()
+
 
 def forward_request(host, port, request):
     """
@@ -110,13 +114,30 @@ def resolve_routing_policy(hostname, routes):
             proxy_port = '9000'
         elif len(proxy_map) == 1:
             proxy_host, proxy_port = proxy_map[0].split(":", 2)
-        #elif: # apply the policy handling 
-        #   proxy_map
-        #   policy
         else:
-            # Out-of-handle mapped host
-            proxy_host = '127.0.0.1'
-            proxy_port = '9000'
+            # Apply policy for multiple backends (default to round-robin)
+            selected_index = 0
+            if policy and policy.lower() == 'round-robin':
+                # Maintain an index per hostname safely across threads
+                with _RR_STATE_LOCK:
+                    state = _RR_STATE.get(hostname)
+                    if state is None:
+                        state = {"index": 0, "lock": threading.Lock()}
+                        _RR_STATE[hostname] = state
+                # Use per-hostname lock to rotate
+                with state["lock"]:
+                    selected_index = state["index"] % len(proxy_map)
+                    state["index"] = (state["index"] + 1) % len(proxy_map)
+            else:
+                # Fallback: just pick first
+                selected_index = 0
+
+            try:
+                proxy_host, proxy_port = proxy_map[selected_index].split(":", 2)
+            except Exception:
+                # Fallback safe default if entry malformed
+                proxy_host = '127.0.0.1'
+                proxy_port = '9000'
     else:
         print("[Proxy] resolve route of hostname {} is a singulair to".format(hostname))
         proxy_host, proxy_port = proxy_map.split(":", 2)

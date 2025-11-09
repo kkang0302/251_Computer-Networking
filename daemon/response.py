@@ -357,14 +357,7 @@ class Response():
         :rtype bytes: complete HTTP response using prepared headers and content.
         """
         try:
-            # If status and content already set by hook, use them
-            if self.status_code == 401:
-                return self.build_unauthorized()
-            
-            if self.status_code == 404:
-                return self.build_notfound()
-            
-            # If content was set by hook handler
+            # If content was set by hook handler, use it directly (don't override with error pages)
             if self._content:
                 if isinstance(self._content, str):
                     self._content = self._content.encode('utf-8')
